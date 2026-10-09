@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: int_bureau_balance_by_bureau
+    columns:
+      - name: sk_id_bureau
+        data_tests: [unique, not_null]
+
+  - name: int_bureau_agg
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+
+  - name: int_previous_application_agg
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+
+  - name: int_installments_agg
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+
+  - name: int_pos_cash_agg
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+
+  - name: int_credit_card_agg
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]

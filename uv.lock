@@ -1252,6 +1252,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "dbt-postgres" },
+    { name = "fastapi" },
     { name = "lightgbm" },
     { name = "mlflow" },
     { name = "numpy" },
@@ -1260,6 +1261,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "scikit-learn" },
     { name = "sqlalchemy" },
+    { name = "uvicorn" },
     { name = "xgboost" },
 ]
 
@@ -1273,6 +1275,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "dbt-postgres", specifier = ">=1.11.0" },
+    { name = "fastapi", specifier = ">=0.115.0" },
     { name = "lightgbm", specifier = ">=4.7.0" },
     { name = "mlflow", specifier = ">=3.17.0" },
     { name = "numpy", specifier = ">=2.5.3" },
@@ -1281,6 +1284,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.4" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "sqlalchemy", specifier = ">=2.1.4" },
+    { name = "uvicorn", specifier = ">=0.32.0" },
     { name = "xgboost", specifier = ">=3.4.1" },
 ]
 

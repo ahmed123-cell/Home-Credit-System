@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: mart_application_features
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+      - name: dataset
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["train", "test"]
+      - name: target
+        data_tests:
+          - not_null:
+              config:
+                where: "dataset = 'train'"
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false

@@ -1,0 +1,18 @@
+name: home_credit
+version: "1.0.0"
+profile: home_credit
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+models:
+  home_credit:
+    staging:
+      +schema: staging
+      +materialized: table
+    intermediate:
+      +schema: intermediate
+      +materialized: table
+    marts:
+      +schema: marts
+      +materialized: table

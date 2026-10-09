@@ -11,3 +11,14 @@ wheels/
 
 # logs
 *logs
+
+# data 
+data/
+
+# env
+*.env
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/

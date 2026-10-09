@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_application_train
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+      - name: target
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false
+
+  - name: stg_application_test
+    columns:
+      - name: sk_id_curr
+        data_tests: [unique, not_null]
+
+  - name: stg_bureau
+    columns:
+      - name: sk_id_bureau
+        data_tests: [unique, not_null]
+
+  - name: stg_previous_application
+    columns:
+      - name: sk_id_prev
+        data_tests: [unique, not_null]
