@@ -1,3 +1,8 @@
+{{ config(
+    materialized='incremental',
+    unique_key='sk_id_bureau'
+) }}
+
 select
     sk_id_bureau,
     count(*)                                              as bb_months_cnt,

@@ -1,4 +1,5 @@
 """Load raw Home Credit CSVs into PostgreSQL `raw` schema (no transformations)."""
+
 import csv
 import logging
 import os
@@ -36,6 +37,7 @@ def read_header(path: Path) -> list[str]:
     with path.open(newline="", encoding="utf-8") as f:
         return next(csv.reader(f))
 
+
 def load_file(conn: psycopg.Connection, path: Path) -> int:
     table = path.stem.lower()
     columns = [c.lower() for c in read_header(path)]
@@ -45,7 +47,9 @@ def load_file(conn: psycopg.Connection, path: Path) -> int:
     with conn.cursor() as cur:
         cur.execute(sql.SQL("DROP TABLE IF EXISTS {}").format(target))
         cur.execute(
-            sql.SQL("CREATE TABLE {} ({}, _loaded_at timestamptz DEFAULT now())").format(
+            sql.SQL(
+                "CREATE TABLE {} ({}, _loaded_at timestamptz DEFAULT now())"
+            ).format(
                 target,
                 sql.SQL(", ").join(sql.SQL("{} text").format(c) for c in col_idents),
             )
@@ -64,24 +68,35 @@ def load_file(conn: psycopg.Connection, path: Path) -> int:
 
     expected = EXPECTED_ROWS.get(table)
     if expected is not None and rows != expected:
-        log.warning("%s: loaded %s rows, expected %s", table, f"{rows:,}", f"{expected:,}")
+        log.warning(
+            "%s: loaded %s rows, expected %s", table, f"{rows:,}", f"{expected:,}"
+        )
     return rows
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
+    )
     dsn = os.environ.get("DATABASE_URL")
     if not dsn:
         sys.exit("Set DATABASE_URL, e.g. postgresql://user:pass@localhost:5432/dbname")
 
     files = sorted(RAW_DIR.glob("*.csv"))
     with psycopg.connect(dsn) as conn:
-        conn.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(SCHEMA)))
+        conn.execute(
+            sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(SCHEMA))
+        )
         conn.commit()
         for path in files:
             start = time.perf_counter()
             rows = load_file(conn, path)
-            log.info("%-28s %12s rows  %6.1fs", path.name, f"{rows:,}", time.perf_counter() - start)
+            log.info(
+                "%-28s %12s rows  %6.1fs",
+                path.name,
+                f"{rows:,}",
+                time.perf_counter() - start,
+            )
 
 
 if __name__ == "__main__":

@@ -12,7 +12,9 @@ models:
       +materialized: table
     intermediate:
       +schema: intermediate
-      +materialized: table
+      +materialized: incremental
+      +unique_key: sk_id_curr
     marts:
       +schema: marts
-      +materialized: table
+      +materialized: incremental
+      +unique_key: sk_id_curr

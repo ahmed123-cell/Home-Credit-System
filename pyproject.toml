@@ -7,13 +7,20 @@ requires-python = ">=3.12"
 dependencies = [
     "dbt-postgres>=1.11.0",
     "fastapi>=0.115.0",
+    "httpx>=0.28.1",
     "lightgbm>=4.7.0",
     "mlflow>=3.17.0",
     "numpy>=2.5.3",
+    "onnx>=1.23.2",
+    "onnxmltools>=1.16.0",
+    "onnxruntime>=1.31.0",
     "pandas>=3.0.6",
     "psycopg[binary]>=3.3.6",
+    "pyarrow>=25.0.1",
     "python-dotenv>=1.2.4",
+    "pyyaml>=6.0.3",
     "scikit-learn>=1.9.1",
+    "skl2onnx>=1.20.0",
     "sqlalchemy>=2.1.4",
     "uvicorn>=0.32.0",
     "xgboost>=3.4.1",
@@ -27,10 +34,10 @@ build-backend = "hatchling.build"
 packages = ["src/ingestion", "src/training"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 
 [tool.ruff]
-src = ["src"]
+src = [".", "src"]
 
 [dependency-groups]
 dev = [

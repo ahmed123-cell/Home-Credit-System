@@ -22,3 +22,10 @@ data/
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+
+# models
+models/
+
+# mlruns
+mlruns
+mlflow.db

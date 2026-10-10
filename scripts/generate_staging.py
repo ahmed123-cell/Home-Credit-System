@@ -1,4 +1,5 @@
 """Generate dbt staging models by inferring column types from the raw tables."""
+
 import os
 from pathlib import Path
 
@@ -35,7 +36,9 @@ def infer_types(conn, table: str, cols: list[str]) -> dict[str, str]:
     types = {}
     for i, c in enumerate(cols):
         non_int, non_num = row[2 * i], row[2 * i + 1]
-        types[c] = "bigint" if non_int == 0 else "double precision" if non_num == 0 else "text"
+        types[c] = (
+            "bigint" if non_int == 0 else "double precision" if non_num == 0 else "text"
+        )
     return types
 
 
