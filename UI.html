@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home Credit · Default risk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eeeeec; --card:#ffffff; --ink:#2a3230; --muted:#7a8480; --line:#d3d8d5;
+  --sage:#8c9893; --sage-d:#76837e; --sage-l:#a3aeaa; --warm:#e0a15a;
+  --t1:#5f9a7d; --t2:#a7b862; --t3:#e0934e; --t4:#c4524a;
+  --radius:20px;
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ---------- intro ---------- */
+#intro{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#9aa6a1 0%,#82908b 55%,#74827d 100%);
+  display:grid;place-items:center;overflow:hidden;cursor:pointer;transition:transform .95s cubic-bezier(.77,0,.18,1)}
+#intro.leave{transform:translateY(-101%)}
+.win{position:absolute;width:44vw;max-width:620px;aspect-ratio:16/10;border-radius:22px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.22);box-shadow:0 30px 60px rgba(40,52,48,.18);backdrop-filter:blur(2px)}
+.win::before{content:"";position:absolute;left:18px;top:16px;width:46px;height:10px;border-radius:6px;
+  background:radial-gradient(circle at 5px 5px,rgba(255,255,255,.55) 4px,transparent 5px) 0 0/16px 10px repeat-x}
+.win.a{left:-6vw;top:8vh;transform:rotate(-14deg);animation:drift 9s ease-in-out infinite alternate}
+.win.b{right:-8vw;bottom:-4vh;transform:rotate(11deg);animation:drift 11s ease-in-out -3s infinite alternate}
+.win.c{right:6vw;top:-14vh;width:30vw;transform:rotate(-6deg);opacity:.7;animation:drift 13s ease-in-out -6s infinite alternate}
+@keyframes drift{to{translate:0 -22px}}
+.intro-copy{position:relative;text-align:center;color:#fff;padding:0 24px}
+.intro-small{font-size:clamp(15px,2vw,20px);font-weight:500;letter-spacing:.02em;opacity:.92;margin-bottom:10px}
+.intro-big{font-size:clamp(44px,9vw,104px);font-weight:800;letter-spacing:-.035em;line-height:1}
+.ch{display:inline-block;opacity:0;transform:translateY(.7em) rotateX(-70deg);filter:blur(10px);
+  animation:rise .8s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--d) + var(--i)*48ms)}
+.ch.sp{width:.28em}
+@keyframes rise{to{opacity:1;transform:none;filter:blur(0)}}
+.intro-line{height:4px;width:0;margin:22px auto 0;border-radius:4px;background:var(--warm);animation:draw .9s cubic-bezier(.6,0,.2,1) 2.3s forwards}
+@keyframes draw{to{width:min(240px,50vw)}}
+.intro-skip{position:absolute;bottom:28px;left:0;right:0;text-align:center;color:rgba(255,255,255,.7);font-size:12.5px;animation:fadeIn .6s 1.2s both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.side{background:var(--sage);color:#fff;padding:26px 18px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:0 10px 22px;font-weight:800;font-size:21px;letter-spacing:-.02em}
+.brand svg{width:30px;height:30px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
+  color:rgba(255,255,255,.88);font-weight:500;transition:background .2s}
+.nav button svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav button:hover{background:rgba(255,255,255,.12)}
+.nav button[aria-current="true"]{background:#fff;color:var(--ink);box-shadow:0 8px 20px rgba(40,52,48,.14);font-weight:600}
+.nav .done{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--warm);opacity:0}
+.nav button.filled .done{opacity:1}
+.api{margin-top:auto;background:rgba(255,255,255,.2);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px}
+.api h3{margin:0;font-size:17px;font-weight:700;line-height:1.2}
+.api label{font-size:12px;color:rgba(255,255,255,.85);display:flex;flex-direction:column;gap:4px}
+.api input{background:rgba(255,255,255,.9);color:var(--ink);border:0;border-radius:10px;padding:8px 10px;width:100%}
+.status{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.dot{width:9px;height:9px;border-radius:50%;background:#d8dcda;flex:none}
+.dot.ok{background:#8fe0a8;box-shadow:0 0 0 4px rgba(143,224,168,.28)}
+.dot.bad{background:#f08c80}
+
+main{padding:26px 30px 40px;min-width:0}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.top h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.top p{margin:4px 0 0;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;position:relative}
+.btn{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px 16px;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.btn:hover{box-shadow:0 8px 18px rgba(40,52,48,.1)}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary[disabled]{opacity:.6;cursor:progress}
+.menu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border-radius:14px;box-shadow:0 18px 40px rgba(40,52,48,.2);padding:6px;z-index:20;min-width:200px}
+.menu[hidden]{display:none}
+.menu button{all:unset;display:block;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;cursor:pointer}
+.menu button:hover{background:var(--bg)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:var(--radius);padding:16px 18px;box-shadow:0 10px 30px rgba(40,52,48,.06)}
+.stat small{color:var(--muted);display:block;margin-bottom:6px}
+.stat b{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.stat span{color:var(--muted);font-size:12px;margin-left:4px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:20px;align-items:start}
+.panel{background:var(--card);border:1px dashed var(--line);border-radius:26px;padding:24px;box-shadow:0 10px 30px rgba(40,52,48,.05)}
+.panel h2{margin:0 0 4px;font-size:19px;font-weight:700}
+.panel .lead{margin:0 0 18px;color:var(--muted)}
+.group{margin:0 0 22px}
+.group h4{margin:0 0 10px;font-size:14px;font-weight:700;color:var(--sage-d)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>label{font-size:12.5px;font-weight:600;color:#4a5551}
+.field .box{display:flex;align-items:center;background:#f6f6f4;border:1px solid transparent;border-radius:12px;transition:border-color .15s,background .15s}
+.field .box:focus-within{background:#fff;border-color:var(--sage)}
+.field.err .box{border-color:var(--t4);background:#fdf3f2}
+.field input[type=number],.field select{background:transparent;border:0;padding:10px 12px;width:100%;min-width:0;outline:none}
+.field select{appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#7a8480 50%),linear-gradient(135deg,#7a8480 50%,transparent 50%);
+  background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+.unit{padding-right:12px;color:var(--muted);font-size:12px;white-space:nowrap}
+.hint{font-size:11.5px;color:var(--muted)}
+.score input[type=range]{width:100%;accent-color:var(--sage-d);margin:6px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.chip span{display:block;padding:9px 14px;border-radius:999px;background:#f6f6f4;border:1px solid var(--line);cursor:pointer;transition:all .15s;font-weight:500}
+.chip input:checked+span{background:var(--sage);border-color:var(--sage);color:#fff}
+.chip input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:12px}
+.note{background:#f3f5f4;border-radius:14px;padding:12px 14px;color:#56625d;margin:0 0 18px}
+
+.side-col{display:flex;flex-direction:column;gap:20px;position:sticky;top:20px}
+.card{background:var(--card);border-radius:26px;padding:22px;box-shadow:0 10px 30px rgba(40,52,48,.07)}
+.card h3{margin:0 0 12px;font-size:16px;font-weight:700}
+.gauge{width:100%;max-width:300px;margin:0 auto;display:block}
+.score-num{font-size:46px;font-weight:800;letter-spacing:-.03em;text-align:center;line-height:1;margin-top:-52px}
+.score-sub{text-align:center;color:var(--muted);font-size:12.5px;margin-top:6px}
+.pill{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:700;color:#fff;font-size:13px}
+.verdict{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.empty{color:var(--muted);text-align:center;padding:18px 6px}
+.errbox{background:#fdf3f2;color:#8e3a33;border-radius:14px;padding:12px 14px}
+.metrics{display:grid;grid-template-columns:1fr auto;gap:8px 12px;margin:16px 0 0;padding-top:14px;border-top:1px dashed var(--line);font-size:13px}
+.metrics dt{color:var(--muted)} .metrics dd{margin:0;font-weight:600;text-align:right}
+.caveat{margin:14px 0 0;font-size:12px;color:var(--muted)}
+.bar{height:8px;border-radius:8px;background:#e8ebe9;overflow:hidden;margin:10px 0 8px}
+.bar i{display:block;height:100%;background:var(--sage);border-radius:8px;transition:width .3s}
+.dark{background:linear-gradient(150deg,#8d9994,#6f7c77);color:#fff}
+.dark p{margin:0;color:rgba(255,255,255,.88)}
+
+@media (max-width:1100px){.layout{grid-template-columns:1fr}.side-col{position:static}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:column;padding:16px}
+  .nav{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .nav button{white-space:nowrap}
+  .api{margin-top:12px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  main{padding:20px 16px 40px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ch{animation:none;opacity:1;transform:none;filter:none}
+  .intro-line{animation:none;width:min(240px,50vw)}
+  .win{animation:none} #intro{transition:opacity .4s} #intro.leave{transform:none;opacity:0;pointer-events:none}
+}
+</style>
+</head>
+<body>
+
+<div id="intro" role="presentation">
+  <div class="win a"></div><div class="win b"></div><div class="win c"></div>
+  <div class="intro-copy" aria-label="This project made by Ahmed Hazem">
+    <div class="intro-small" id="introSmall" aria-hidden="true"></div>
+    <div class="intro-big" id="introBig" aria-hidden="true"></div>
+    <div class="intro-line"></div>
+  </div>
+  <div class="intro-skip">Click anywhere to skip</div>
+</div>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 27 21 3l-3 15 9 1-22 8Z" fill="#fff" opacity=".95"/></svg>
+      Home Credit
+    </div>
+    <nav class="nav" id="nav" aria-label="Application sections"></nav>
+
+    <div class="api">
+      <h3>API connection</h3>
+      <div class="status"><span class="dot" id="dot"></span><span id="statusText">Checking…</span></div>
+      <label>Address<input id="apiUrl" type="url" spellcheck="false"></label>
+      <label>Decision threshold<input id="thr" type="number" min="0" max="1" step="0.05" value="0.5"></label>
+    </div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div>
+        <h1>New application</h1>
+        <p>Fill in what you know. Anything left blank is treated as unknown.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="exBtn" aria-haspopup="true" aria-expanded="false">Fill an example</button>
+        <div class="menu" id="exMenu" hidden>
+          <button data-ex="steady">Steady borrower</button>
+          <button data-ex="risky">Risky borrower</button>
+        </div>
+        <button class="btn" id="clearBtn">Clear all</button>
+        <button class="btn primary" id="predictBtn">Get prediction</button>
+      </div>
+    </div>
+
+    <section class="stats" aria-label="Live ratios">
+      <div class="stat"><small>Credit ÷ income</small><b id="s1">—</b><span>×</span></div>
+      <div class="stat"><small>Annuity ÷ income</small><b id="s2">—</b><span>%</span></div>
+      <div class="stat"><small>Payments to repay</small><b id="s3">—</b><span>installments</span></div>
+      <div class="stat"><small>Credit ÷ goods price</small><b id="s4">—</b><span>×</span></div>
+    </section>
+
+    <div class="layout">
+      <section class="panel" id="panel" aria-live="off"></section>
+
+      <div class="side-col">
+        <section class="card" id="result" aria-live="polite" aria-label="Prediction">
+          <h3>Prediction</h3>
+          <div class="empty">Fill the required fields and choose <b>Get prediction</b>.</div>
+        </section>
+        <section class="card dark">
+          <h3 style="color:#fff">Completeness</h3>
+          <div class="bar" style="background:rgba(255,255,255,.28)"><i id="barFill" style="width:0;background:#fff"></i></div>
+          <p id="barText">0 fields filled</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const DAY = 365.25;
+
+/* ============================ Intro ============================ */
+function splitInto(el, text, delay) {
+  let i = 0;
+  for (const c of text) {
+    const s = document.createElement("span");
+    s.className = "ch" + (c === " " ? " sp" : "");
+    s.textContent = c === " " ? "\u00a0" : c;
+    s.style.setProperty("--i", i++);
+    s.style.setProperty("--d", delay + "ms");
+    el.appendChild(s);
+  }
+}
+splitInto($("#introSmall"), "This project made by", 250);
+splitInto($("#introBig"), "Ahmed Hazem", 1000);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let introDone = false;
+function endIntro() {
+  if (introDone) return; introDone = true;
+  const el = $("#intro"); el.classList.add("leave");
+  setTimeout(() => el.remove(), 1100);
+}
+$("#intro").addEventListener("click", endIntro);
+addEventListener("keydown", e => { if (!introDone && ["Enter", "Escape", " "].includes(e.key)) endIntro(); });
+setTimeout(endIntro, reduce ? 1600 : 4400);
+
+/* ============================ Field config ============================ */
+const YN = [{ v: "Y", l: "Yes" }, { v: "N", l: "No" }];
+const opts = a => a.map(x => ({ v: x, l: x }));
+const num = (id, label, o = {}) => ({ id, label, type: "num", ...o });
+const sel = (id, label, fb, o = {}) => ({ id, label, type: "sel", fallback: typeof fb[0] === "string" ? opts(fb) : fb, ...o });
+const pick = (id, label, o = {}) => ({ id, label, type: "pick", ...o });
+const tog = (id, label) => ({ id, label, type: "tog" });
+const score = (id, label) => ({ id, label, type: "score" });
+const rating = [{ v: 1, l: "1 (best)" }, { v: 2, l: "2" }, { v: 3, l: "3 (worst)" }];
+const yrs = y => -Math.round(y * DAY);
+
+const SECTIONS = [
+  { id: "personal", title: "Personal", lead: "Who is applying.", icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+    groups: [
+      { fields: [
+        sel("code_gender", "Gender", ["F", "M"], {}),
+        num("age", "Age", { unit: "years", min: 18, max: 100, step: 1, api: "days_birth", to: yrs, required: true }),
+        sel("name_family_status", "Family status", ["Married", "Single / not married", "Civil marriage", "Separated", "Widow"]),
+        sel("name_education_type", "Education", ["Secondary / secondary special", "Higher education", "Incomplete higher", "Lower secondary", "Academic degree"]),
+        num("cnt_children", "Children", { min: 0, step: 1 }),
+        num("cnt_fam_members", "Family members", { min: 1, step: 1, hint: "Including the applicant" }),
+        sel("flag_own_car", "Owns a car", YN),
+        num("own_car_age", "Car age", { unit: "years", min: 0, step: 1, when: v => v.flag_own_car === "Y" }),
+        sel("flag_own_realty", "Owns property", YN),
+      ]},
+      { title: "Documents and contact", fields: [
+        num("years_id", "ID issued", { unit: "years ago", min: 0, step: 1, api: "days_id_publish", to: yrs }),
+        num("years_reg", "Registration last changed", { unit: "years ago", min: 0, step: 1, api: "days_registration", to: yrs }),
+        num("months_phone", "Phone number last changed", { unit: "months ago", min: 0, step: 1, api: "days_last_phone_change", to: m => -Math.round(m * 30.4) }),
+      ]},
+      { chips: [tog("flag_phone", "Home phone"), tog("flag_work_phone", "Work phone"), tog("flag_emp_phone", "Employer phone"),
+                tog("flag_email", "Email provided"), tog("flag_document_3", "Document 3 provided")] },
+    ]},
+  { id: "loan", title: "Loan", lead: "What is being requested.", icon: '<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/>',
+    groups: [{ fields: [
+      sel("name_contract_type", "Loan type", ["Cash loans", "Revolving loans"], { required: true }),
+      num("amt_credit", "Loan amount", { min: 0, step: 1000, required: true }),
+      num("amt_annuity", "Annuity (per installment)", { min: 0, step: 100, required: true }),
+      num("amt_goods_price", "Price of goods", { min: 0, step: 1000, hint: "Leave empty for cash loans without a purchase" }),
+      sel("name_type_suite", "Accompanied by", ["Unaccompanied", "Family", "Spouse, partner", "Children", "Other_A", "Other_B", "Group of people"]),
+      sel("weekday_appr_process_start", "Application weekday", ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]),
+      num("hour_appr_process_start", "Application hour", { min: 0, max: 23, step: 1, unit: "0–23" }),
+    ]}]},
+  { id: "work", title: "Employment and income", lead: "How the applicant earns.", icon: '<rect x="3" y="7" width="18" height="13" rx="3"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+    groups: [{ fields: [
+      num("amt_income_total", "Annual income", { min: 0, step: 1000, required: true }),
+      sel("name_income_type", "Income source", ["Working", "Commercial associate", "Pensioner", "State servant", "Unemployed", "Student", "Businessman", "Maternity leave"]),
+      sel("occupation_type", "Occupation", ["Laborers", "Sales staff", "Core staff", "Managers", "Drivers", "High skill tech staff", "Accountants", "Medicine staff", "Security staff", "Cooking staff", "Cleaning staff", "Private service staff", "Low-skill Laborers", "Waiters/barmen staff", "Secretaries", "Realty agents", "HR staff", "IT staff"]),
+      sel("organization_type", "Employer type", ["Business Entity Type 3", "Self-employed", "Other", "Medicine", "Business Entity Type 2", "Government", "School", "Trade: type 7", "Kindergarten", "Construction", "Business Entity Type 1", "Transport: type 4", "Military", "Police", "Bank", "Services", "Security", "Housing"]),
+      num("years_employed", "Time in current job", { unit: "years", min: 0, step: 0.5, api: "days_employed", to: yrs, hint: "Leave empty if unemployed or retired" }),
+    ]}]},
+  { id: "scores", title: "Credit scores", lead: "External scores and recent enquiries.", icon: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 16 4-5"/>',
+    groups: [
+      { title: "External scores (0 to 1, higher is safer)", fields: [score("ext_source_1", "Score 1"), score("ext_source_2", "Score 2"), score("ext_source_3", "Score 3")] },
+      { title: "Credit bureau enquiries", fields: [
+        num("amt_req_credit_bureau_hour", "Last hour", { min: 0, step: 1 }), num("amt_req_credit_bureau_day", "Last day", { min: 0, step: 1 }),
+        num("amt_req_credit_bureau_week", "Last week", { min: 0, step: 1 }), num("amt_req_credit_bureau_mon", "Last month", { min: 0, step: 1 }),
+        num("amt_req_credit_bureau_qrt", "Last quarter", { min: 0, step: 1 }), num("amt_req_credit_bureau_year", "Last year", { min: 0, step: 1 }),
+      ]},
+      { title: "Social circle", fields: [
+        num("obs_30_cnt_social_circle", "Observed, 30 days", { min: 0, step: 1 }), num("def_30_cnt_social_circle", "Defaulted, 30 days", { min: 0, step: 1 }),
+        num("obs_60_cnt_social_circle", "Observed, 60 days", { min: 0, step: 1 }), num("def_60_cnt_social_circle", "Defaulted, 60 days", { min: 0, step: 1 }),
+      ]},
+    ]},
+  { id: "housing", title: "Housing and region", lead: "Where the applicant lives.", icon: '<path d="m3 11 9-8 9 8M5 10v10h14V10"/>',
+    groups: [
+      { fields: [
+        sel("name_housing_type", "Housing", ["House / apartment", "With parents", "Municipal apartment", "Rented apartment", "Office apartment", "Co-op apartment"]),
+        num("region_population_relative", "Region population", { min: 0, step: 0.001, hint: "Relative to the country, about 0.0003 to 0.07" }),
+        pick("region_rating_client", "Region rating", { options: rating }),
+        pick("region_rating_client_w_city", "Region and city rating", { options: rating }),
+      ]},
+      { title: "Addresses that differ", chips: [
+        tog("reg_region_not_live_region", "Permanent vs contact (region)"), tog("reg_region_not_work_region", "Permanent vs work (region)"),
+        tog("live_region_not_work_region", "Contact vs work (region)"), tog("reg_city_not_live_city", "Permanent vs contact (city)"),
+        tog("reg_city_not_work_city", "Permanent vs work (city)"), tog("live_city_not_work_city", "Contact vs work (city)"),
+      ]},
+    ]},
+  { id: "history", title: "Credit history", lead: "Optional. Leave everything blank for a first-time customer.", icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    groups: [
+      { note: "Enter the count first in each block (for example credits reported). A block with no count is treated as no history.", fields: [] },
+      { title: "Credit bureau", fields: [
+        num("bureau_cnt", "Credits reported", { min: 0, step: 1 }), num("bureau_active_cnt", "Active", { min: 0, step: 1 }),
+        num("bureau_closed_cnt", "Closed", { min: 0, step: 1 }), num("bureau_cnt_last_2y", "Opened in last 2 years", { min: 0, step: 1 }),
+        num("bureau_overdue_cnt", "Ever overdue", { min: 0, step: 1 }), num("bureau_credit_sum", "Total credit amount", { min: 0, step: 1000 }),
+        num("bureau_debt_sum", "Current debt", { min: 0, step: 1000 }), num("bureau_day_overdue_max", "Longest overdue", { unit: "days", min: 0, step: 1 }),
+      ]},
+      { title: "Earlier Home Credit applications", fields: [
+        num("prev_cnt", "Applications", { min: 0, step: 1 }), num("prev_approved_cnt", "Approved", { min: 0, step: 1 }),
+        num("prev_refused_cnt", "Refused", { min: 0, step: 1 }), num("prev_canceled_cnt", "Canceled", { min: 0, step: 1 }),
+        num("prev_amt_credit_mean", "Average credit", { min: 0, step: 1000 }), num("prev_amt_annuity_mean", "Average annuity", { min: 0, step: 100 }),
+      ]},
+      { title: "Installment payments", fields: [
+        num("inst_cnt", "Installments paid", { min: 0, step: 1 }), num("inst_late_share", "Share paid late", { unit: "0 to 1", min: 0, max: 1, step: 0.01 }),
+        num("inst_dpd_mean", "Average days late", { min: 0, step: 0.1 }), num("inst_dpd_max", "Longest delay", { unit: "days", min: 0, step: 1 }),
+      ]},
+      { title: "Cash loans and cards", fields: [
+        num("pos_rows", "Cash loan months on record", { min: 0, step: 1 }), num("cc_rows", "Credit card months on record", { min: 0, step: 1 }),
+        num("cc_utilization_mean", "Average card utilization", { unit: "0 to 1", min: 0, step: 0.01 }),
+      ]},
+    ]},
+];
+const ALL = SECTIONS.flatMap(s => s.groups.flatMap(g => [...(g.fields || []), ...(g.chips || [])]));
+const BY_ID = Object.fromEntries(ALL.map(f => [f.id, f]));
+
+/* ============================ Rendering ============================ */
+let schema = null;                  // from GET /schema
+let current = "personal";
+
+function levelsFor(f) {
+  const fromApi = schema?.categories?.[f.id];
+  if (fromApi?.length) return fromApi.map(x => ({ v: x, l: (f.fallback || []).find(o => o.v === x)?.l ?? x }));
+  return f.fallback || [];
+}
+function fieldHTML(f) {
+  const id = "f_" + f.id, hint = f.hint ? `<span class="hint">${f.hint}</span>` : "";
+  const req = f.required ? " *" : "";
+  if (f.type === "tog") return `<label class="chip"><input type="checkbox" id="${id}"><span>${f.label}</span></label>`;
+  if (f.type === "sel" || f.type === "pick") {
+    const o = f.type === "pick" ? f.options : levelsFor(f);
+    return `<div class="field" data-id="${f.id}"><label for="${id}">${f.label}${req}</label><div class="box"><select id="${id}"><option value="">Select…</option>${o.map(x => `<option value="${x.v}">${x.l}</option>`).join("")}</select></div>${hint}</div>`;
+  }
+  if (f.type === "score") return `<div class="field score" data-id="${f.id}"><label for="${id}">${f.label}</label><div class="box"><input type="number" id="${id}" min="0" max="1" step="0.01" placeholder="Not available"></div><input type="range" id="${id}_r" min="0" max="1" step="0.01" value="0.5" aria-label="${f.label} slider"></div>`;
+  const attrs = ["min", "max", "step"].filter(k => f[k] !== undefined).map(k => `${k}="${f[k]}"`).join(" ");
+  return `<div class="field" data-id="${f.id}"><label for="${id}">${f.label}${req}</label><div class="box"><input type="number" inputmode="decimal" id="${id}" ${attrs}>${f.unit ? `<span class="unit">${f.unit}</span>` : ""}</div>${hint}</div>`;
+}
+function renderNav() {
+  $("#nav").innerHTML = SECTIONS.map(s => `<button data-s="${s.id}" ${s.id === current ? 'aria-current="true"' : ""}><svg viewBox="0 0 24 24" aria-hidden="true">${s.icon}</svg>${s.title}<i class="done"></i></button>`).join("");
+}
+function buildPanels() {
+  // Keep every section in the DOM so values persist; show one at a time.
+  $("#panel").innerHTML = SECTIONS.map((s, idx) => {
+    const next = SECTIONS[idx + 1];
+    const body = s.groups.map(g => `<div class="group">${g.title ? `<h4>${g.title}</h4>` : ""}${g.note ? `<p class="note">${g.note}</p>` : ""}${g.fields?.length ? `<div class="fields">${g.fields.map(fieldHTML).join("")}</div>` : ""}${g.chips ? `<div class="chips">${g.chips.map(fieldHTML).join("")}</div>` : ""}</div>`).join("");
+    return `<div data-panel="${s.id}" ${s.id === current ? "" : "hidden"}><h2>${s.title}</h2><p class="lead">${s.lead}</p>${body}
+      <div class="foot"><span class="hint">${idx + 1} of ${SECTIONS.length}</span>${next ? `<button class="btn" data-go="${next.id}">Next: ${next.title}</button>` : `<button class="btn primary" data-predict>Get prediction</button>`}</div></div>`;
+  }).join("");
+  wireInputs();
+}
+function show(id) {
+  current = id;
+  $$("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== id);
+  $$("#nav button").forEach(b => {
+    if (b.dataset.s === id) b.setAttribute("aria-current", "true");
+    else b.removeAttribute("aria-current");
+  });
+  scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+}
+function wireInputs() {
+  $$("#panel input, #panel select").forEach(el => el.addEventListener("input", onChange));
+  $$(".score").forEach(w => {
+    const n = $("input[type=number]", w), r = $("input[type=range]", w);
+    r.addEventListener("input", () => { n.value = r.value; onChange(); });
+    n.addEventListener("input", () => { if (n.value !== "") r.value = n.value; });
+  });
+}
+
+/* ============================ Values ============================ */
+function raw(f) {
+  const el = $("#f_" + f.id); if (!el) return null;
+  if (f.type === "tog") return el.checked ? 1 : 0;
+  if (f.type === "sel") return el.value || null;
+  if (f.type === "pick") return el.value === "" ? null : Number(el.value);
+  if (el.value.trim() === "") return null;
+  const n = Number(el.value); return Number.isFinite(n) ? n : null;
+}
+function rawAll() { return Object.fromEntries(ALL.map(f => [f.id, raw(f)])); }
+function buildPayload() {
+  const r = rawAll(), out = { flag_cont_mobile: 1 };
+  for (const f of ALL) {
+    let v = r[f.id];
+    if (v === null || (f.when && !f.when(r))) continue;
+    if (f.to) v = f.to(v);
+    out[f.api || f.id] = v;
+  }
+  return out;
+}
+function setValues(map) {
+  for (const f of ALL) {
+    const el = $("#f_" + f.id); if (!el) continue;
+    const v = map[f.id];
+    if (f.type === "tog") el.checked = !!v;
+    else el.value = v === undefined || v === null ? "" : v;
+    if (f.type === "score") $("#f_" + f.id + "_r").value = el.value === "" ? 0.5 : el.value;
+  }
+  onChange();
+}
+const EXAMPLES = {
+  steady: { code_gender: "F", age: 44, name_family_status: "Married", name_education_type: "Higher education", cnt_children: 1, cnt_fam_members: 3,
+    flag_own_car: "Y", own_car_age: 6, flag_own_realty: "Y", years_id: 8, years_reg: 10, months_phone: 30, flag_phone: 1, flag_emp_phone: 1, flag_email: 1,
+    name_contract_type: "Cash loans", amt_credit: 360000, amt_annuity: 18000, amt_goods_price: 320000, name_type_suite: "Unaccompanied",
+    weekday_appr_process_start: "TUESDAY", hour_appr_process_start: 11, amt_income_total: 240000, name_income_type: "State servant",
+    occupation_type: "Core staff", organization_type: "School", years_employed: 12, ext_source_1: 0.72, ext_source_2: 0.68, ext_source_3: 0.7,
+    amt_req_credit_bureau_hour: 0, amt_req_credit_bureau_day: 0, amt_req_credit_bureau_week: 0, amt_req_credit_bureau_mon: 0, amt_req_credit_bureau_qrt: 0, amt_req_credit_bureau_year: 1,
+    obs_30_cnt_social_circle: 2, def_30_cnt_social_circle: 0, obs_60_cnt_social_circle: 2, def_60_cnt_social_circle: 0,
+    name_housing_type: "House / apartment", region_population_relative: 0.02, region_rating_client: 1, region_rating_client_w_city: 1,
+    bureau_cnt: 5, bureau_active_cnt: 1, bureau_closed_cnt: 4, bureau_cnt_last_2y: 1, bureau_overdue_cnt: 0, bureau_credit_sum: 450000, bureau_debt_sum: 60000,
+    prev_cnt: 3, prev_approved_cnt: 3, prev_refused_cnt: 0, prev_canceled_cnt: 0, inst_cnt: 48, inst_late_share: 0.02, inst_dpd_mean: 0.3, inst_dpd_max: 3 },
+  risky: { code_gender: "M", age: 24, name_family_status: "Single / not married", name_education_type: "Secondary / secondary special", cnt_children: 0, cnt_fam_members: 1,
+    flag_own_car: "N", flag_own_realty: "N", years_id: 2, years_reg: 1, months_phone: 3, flag_phone: 0, flag_emp_phone: 0, flag_email: 0,
+    name_contract_type: "Cash loans", amt_credit: 900000, amt_annuity: 48000, amt_goods_price: 810000, name_type_suite: "Unaccompanied",
+    weekday_appr_process_start: "SATURDAY", hour_appr_process_start: 22, amt_income_total: 90000, name_income_type: "Working",
+    occupation_type: "Laborers", organization_type: "Business Entity Type 3", years_employed: 0.6, ext_source_1: 0.18, ext_source_2: 0.22, ext_source_3: 0.15,
+    amt_req_credit_bureau_hour: 0, amt_req_credit_bureau_day: 0, amt_req_credit_bureau_week: 1, amt_req_credit_bureau_mon: 2, amt_req_credit_bureau_qrt: 3, amt_req_credit_bureau_year: 5,
+    obs_30_cnt_social_circle: 6, def_30_cnt_social_circle: 3, obs_60_cnt_social_circle: 6, def_60_cnt_social_circle: 3,
+    name_housing_type: "With parents", region_population_relative: 0.008, region_rating_client: 3, region_rating_client_w_city: 3, reg_city_not_work_city: 1, live_city_not_work_city: 1,
+    bureau_cnt: 8, bureau_active_cnt: 5, bureau_closed_cnt: 3, bureau_cnt_last_2y: 5, bureau_overdue_cnt: 4, bureau_credit_sum: 800000, bureau_debt_sum: 520000, bureau_day_overdue_max: 45,
+    prev_cnt: 6, prev_approved_cnt: 1, prev_refused_cnt: 4, prev_canceled_cnt: 1, inst_cnt: 30, inst_late_share: 0.55, inst_dpd_mean: 12, inst_dpd_max: 60 },
+};
+
+/* ============================ Live feedback ============================ */
+const fmt = (x, d = 2) => x === null || !isFinite(x) ? "—" : x.toLocaleString(undefined, { maximumFractionDigits: d });
+function onChange() {
+  const r = rawAll(), inc = r.amt_income_total, cr = r.amt_credit, an = r.amt_annuity, gp = r.amt_goods_price;
+  $("#s1").textContent = inc && cr ? fmt(cr / inc) : "—";
+  $("#s2").textContent = inc && an ? fmt(an / inc * 100, 1) : "—";
+  $("#s3").textContent = an && cr ? fmt(cr / an, 0) : "—";
+  $("#s4").textContent = gp && cr ? fmt(cr / gp) : "—";
+  // own_car_age only matters when the applicant owns a car
+  const carField = $('[data-id="own_car_age"]'); if (carField) carField.style.opacity = r.flag_own_car === "Y" ? 1 : .45;
+  const fields = ALL.filter(f => f.type !== "tog"), filled = fields.filter(f => r[f.id] !== null).length;
+  $("#barFill").style.width = (filled / fields.length * 100) + "%";
+  $("#barText").textContent = `${filled} of ${fields.length} fields filled. Blank fields count as unknown.`;
+  SECTIONS.forEach(s => {
+    const any = s.groups.flatMap(g => [...(g.fields || []), ...(g.chips || [])]).some(f => f.type === "tog" ? r[f.id] === 1 : r[f.id] !== null);
+    $(`#nav [data-s="${s.id}"]`)?.classList.toggle("filled", any);
+  });
+  $$(".field.err").forEach(el => { if (r[el.dataset.id] !== null) el.classList.remove("err"); });
+}
+
+/* ============================ API ============================ */
+const apiUrl = $("#apiUrl");
+apiUrl.value = localStorageSafe("hc_api") || (location.protocol.startsWith("http") ? location.origin : "http://localhost:8000");
+function localStorageSafe(k, v) { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch { return null; } }
+const base = () => apiUrl.value.trim().replace(/\/+$/, "");
+
+async function checkApi() {
+  const dot = $("#dot"), txt = $("#statusText");
+  dot.className = "dot"; txt.textContent = "Checking…";
+  try {
+    const h = await (await fetch(base() + "/health")).json();
+    dot.className = "dot ok"; txt.textContent = `Connected · ${String(h.model_type).toUpperCase()}`;
+    try {
+      const s = await (await fetch(base() + "/schema")).json();
+      if (s.categories) { schema = s; refreshSelects(); }
+    } catch { /* /schema is optional */ }
+  } catch {
+    dot.className = "dot bad"; txt.textContent = "Not reachable";
+  }
+}
+function refreshSelects() {
+  for (const f of ALL.filter(x => x.type === "sel")) {
+    const el = $("#f_" + f.id); if (!el) continue;
+    const keep = el.value, o = levelsFor(f);
+    el.innerHTML = `<option value="">Select…</option>` + o.map(x => `<option value="${x.v}">${x.l}</option>`).join("");
+    if (o.some(x => String(x.v) === keep)) el.value = keep;
+  }
+}
+let t; apiUrl.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { localStorageSafe("hc_api", apiUrl.value); checkApi(); }, 500); });
+
+/* ============================ Result gauge ============================ */
+const COLORS = ["var(--t1)", "var(--t2)", "var(--t3)", "var(--t4)"];
+const TIER_COLOR = { "Very Low Risk": "#5f9a7d", "Low Risk": "#8aa657", "Moderate Risk": "#e0934e", "High Risk": "#c4524a" };
+const CX = 150, CY = 150, R = 120;
+const pt = p => { const a = Math.PI * (1 - p); return [CX + R * Math.cos(a), CY - R * Math.sin(a)]; };
+const arc = (p0, p1) => { const [x0, y0] = pt(p0), [x1, y1] = pt(p1); return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${R} ${R} 0 ${p1 - p0 > .5 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; };
+
+function renderResult(d, thr, roundtrip) {
+  const cuts = [0, .2, Math.min(Math.max(thr, .2), .7), .7, 1];
+  const segs = cuts.slice(0, 4).map((c, i) => cuts[i + 1] > c ? `<path d="${arc(c + .004, cuts[i + 1] - .004)}" stroke="${COLORS[i]}" stroke-width="18" fill="none" stroke-linecap="round"/>` : "").join("");
+  const tier = d.risk_tier, col = TIER_COLOR[tier] || "#555";
+  $("#result").innerHTML = `<h3>Prediction</h3>
+    <svg class="gauge" viewBox="0 0 300 170" role="img" aria-label="Risk score gauge">${segs}<circle id="marker" r="11" fill="#fff" stroke="#2a3230" stroke-width="3" cx="${pt(0)[0]}" cy="${pt(0)[1]}"/></svg>
+    <div class="score-num" id="scoreNum">0.0</div>
+    <div class="score-sub">Default risk score (0 to 100)</div>
+    <div class="verdict"><span class="pill" style="background:${col}">${tier}</span>
+      <span class="pill" style="background:${d.prediction ? "#2a3230" : "#76837e"}">${d.prediction ? "Likely to default" : "Likely to repay"}</span></div>
+    <dl class="metrics">
+      <dt>Model</dt><dd>${String(d.model_type).toUpperCase()}</dd>
+      <dt>Preparing features</dt><dd>${fmt(d.preprocess_time_ms, 1)} ms</dd>
+      <dt>Model inference</dt><dd>${fmt(d.inference_time_ms, 2)} ms</dd>
+      <dt>Server total</dt><dd>${fmt(d.total_time_ms, 1)} ms</dd>
+      <dt>Round trip</dt><dd>${fmt(roundtrip, 0)} ms</dd>
+    </dl>
+    <p class="caveat">This is a risk score, not a calibrated probability. The model was trained with class weighting, so 50 does not mean a 50% chance of default.</p>`;
+  const p = d.probability, m = $("#marker"), num = $("#scoreNum"), t0 = performance.now(), dur = reduce ? 1 : 1000;
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3), v = p * e, [x, y] = pt(v);
+    m.setAttribute("cx", x); m.setAttribute("cy", y); num.textContent = (v * 100).toFixed(1);
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+function renderError(msg) {
+  $("#result").innerHTML = `<h3>Prediction</h3><div class="errbox">${msg}</div>`;
+}
+
+async function predict() {
+  const missing = ALL.filter(f => f.required && raw(f) === null);
+  $$(".field.err").forEach(el => el.classList.remove("err"));
+  if (missing.length) {
+    missing.forEach(f => $(`[data-id="${f.id}"]`)?.classList.add("err"));
+    const first = missing[0], sec = SECTIONS.find(s => s.groups.some(g => (g.fields || []).includes(first)));
+    if (sec && sec.id !== current) show(sec.id);
+    renderError(`Fill in the required fields first: ${missing.map(f => f.label).join(", ")}.`);
+    return;
+  }
+  const thr = Math.min(1, Math.max(0, parseFloat($("#thr").value) || 0.5));
+  const btn = $("#predictBtn"); btn.disabled = true; btn.textContent = "Predicting…";
+  const t0 = performance.now();
+  try {
+    const res = await fetch(base() + "/predict", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ features: buildPayload(), threshold: thr }) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail || res.statusText));
+    renderResult(body, thr, performance.now() - t0);
+  } catch (e) {
+    const net = e instanceof TypeError;
+    renderError(net ? `Can't reach the API at <b>${base()}</b>. Start it with <code>PYTHONPATH=src uv run uvicorn app:app --port 8000</code> and check the address in the sidebar.` : `The API returned an error: ${e.message}`);
+    if (net) checkApi();
+  } finally { btn.disabled = false; btn.textContent = "Get prediction"; }
+}
+
+/* ============================ Events ============================ */
+$("#nav").addEventListener("click", e => { const b = e.target.closest("button[data-s]"); if (b) show(b.dataset.s); });
+$("#panel").addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (g) show(g.dataset.go);
+  if (e.target.closest("[data-predict]")) predict();
+});
+$("#predictBtn").addEventListener("click", predict);
+$("#clearBtn").addEventListener("click", () => { setValues({}); $("#result").innerHTML = '<h3>Prediction</h3><div class="empty">Fill the required fields and choose <b>Get prediction</b>.</div>'; });
+const exBtn = $("#exBtn"), exMenu = $("#exMenu");
+exBtn.addEventListener("click", e => { e.stopPropagation(); exMenu.hidden = !exMenu.hidden; exBtn.setAttribute("aria-expanded", String(!exMenu.hidden)); });
+exMenu.addEventListener("click", e => { const b = e.target.closest("[data-ex]"); if (b) { setValues(EXAMPLES[b.dataset.ex]); exMenu.hidden = true; } });
+document.addEventListener("click", () => { exMenu.hidden = true; exBtn.setAttribute("aria-expanded", "false"); });
+
+renderNav(); buildPanels(); onChange(); checkApi();
+</script>
+</body>
+</html>

@@ -297,6 +297,8 @@ def train(
         data_bundle = load_data(
             scale_features=should_scale, force_refresh=force_refresh
         )
+        prep_path = out_dir / f"{model_type}_preprocessor.joblib"
+        data_bundle.preprocessor.save(prep_path)
 
     X_train_full = data_bundle.X_train
     y_train_full = data_bundle.y_train
@@ -396,6 +398,8 @@ def train(
                 "n_features": X_train_full.shape[1],
                 "feature_names": list(X_train_full.columns),
                 "onnx_path": str(onnx_path),
+                "scale_features": should_scale,
+                "preprocessor_path": str(prep_path),
             },
             f,
             indent=2,
@@ -460,6 +464,7 @@ def train(
             # Log artifacts (standalone ONNX, metadata, feature importance CSV)
             mlflow.log_artifact(str(onnx_path), artifact_path="model_files")
             mlflow.log_artifact(str(meta_path), artifact_path="metadata")
+            mlflow.log_artifact(str(prep_path), artifact_path="metadata")
 
             imp_csv = out_dir / f"{model_type}_feature_importance.csv"
             feat_imp.to_csv(imp_csv, index=False)

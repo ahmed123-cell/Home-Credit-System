@@ -22,6 +22,7 @@ import os
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -316,6 +317,14 @@ class Preprocessor:
                 X[self.numeric_cols] = scaled_values
 
         return X
+
+    def save(self, path: str | Path) -> None:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(self, path)
+
+    @staticmethod
+    def load(path: str | Path) -> "Preprocessor":
+        return joblib.load(path)
 
 
 # ----------------------------------------------------------------------------
