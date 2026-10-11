@@ -22,8 +22,8 @@ import os
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
-import joblib
 
+import joblib
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
@@ -323,7 +323,7 @@ class Preprocessor:
         joblib.dump(self, path)
 
     @staticmethod
-    def load(path: str | Path) -> "Preprocessor":
+    def load(path: str | Path) -> Preprocessor:
         return joblib.load(path)
 
 
