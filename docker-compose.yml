@@ -1,0 +1,323 @@
+# ============================================================================
+# Home Credit Default Risk System - Unified Multi-Service Docker Compose
+# ============================================================================
+#
+# Usage:
+#   1. Core Stack (PostgreSQL + MLflow + FastAPI & Web UI):
+#      docker compose up -d
+#
+#   2. Full Stack with Apache Airflow Pipeline Orchestration:
+#      docker compose --profile airflow up -d
+#
+# ============================================================================
+
+x-airflow-common:
+  &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-home-credit-airflow:latest}
+  profiles:
+    - airflow
+  env_file:
+    - ${ENV_FILE_PATH:-.env}
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=}
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW__API_AUTH__JWT_SECRET:-airflow_jwt_secret}
+    AIRFLOW__API_AUTH__JWT_ISSUER: ${AIRFLOW__API_AUTH__JWT_ISSUER:-airflow}
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # Project specific env vars
+    PYTHONPATH: /home/airflow/.local/lib/python3.13/site-packages:/opt/airflow/project/src
+    PROJECT_DIR: /opt/airflow/project
+    DATABASE_URL: postgresql://${POSTGRES_USER:-home_credit}:${POSTGRES_PASSWORD:-home_credit_password}@postgres:5432/${POSTGRES_DB:-home_credit}
+    DBT_HOST: postgres
+    DBT_PORT: 5432
+    DBT_USER: ${POSTGRES_USER:-home_credit}
+    DBT_PASSWORD: ${POSTGRES_PASSWORD:-home_credit_password}
+    DBT_DBNAME: ${POSTGRES_DB:-home_credit}
+    MLFLOW_TRACKING_URI: http://mlflow:5000
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/config:/opt/airflow/config
+    - ./airflow/plugins:/opt/airflow/plugins
+    - .:/opt/airflow/project
+    - mlflow_data:/app/mlruns
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    redis:
+      condition: service_healthy
+    airflow-postgres:
+      condition: service_healthy
+  networks:
+    - home-credit-network
+
+services:
+  # ============================================================================
+  # Core Stack: PostgreSQL 17 (Analytics / Data Warehouse)
+  # ============================================================================
+  postgres:
+    image: postgres:17-alpine
+    container_name: home-credit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-home_credit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-home_credit_password}
+      POSTGRES_DB: ${POSTGRES_DB:-home_credit}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-home_credit} -d ${POSTGRES_DB:-home_credit}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - home-credit-network
+
+  # ============================================================================
+  # Core Stack: MLflow Tracking Server
+  # ============================================================================
+  mlflow:
+    image: ${APP_IMAGE_NAME:-home-credit-system-app:latest}
+    container_name: home-credit-mlflow
+    restart: unless-stopped
+    user: root
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////app/mlruns/mlflow.db
+      --artifacts-destination /app/mlruns/artifacts
+      --serve-artifacts
+      --allowed-hosts "*"
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - mlflow_data:/app/mlruns
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - home-credit-network
+
+  # ============================================================================
+  # Core Stack: FastAPI Real-Time Inference & Web Dashboard
+  # ============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${APP_IMAGE_NAME:-home-credit-system-app:latest}
+    container_name: home-credit-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-home_credit}:${POSTGRES_PASSWORD:-home_credit_password}@postgres:5432/${POSTGRES_DB:-home_credit}
+      - DBT_HOST=postgres
+      - DBT_PORT=5432
+      - DBT_USER=${POSTGRES_USER:-home_credit}
+      - DBT_PASSWORD=${POSTGRES_PASSWORD:-home_credit_password}
+      - DBT_DBNAME=${POSTGRES_DB:-home_credit}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODELS_DIR=/app/models
+      - PYTHONPATH=/app:/app/src
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data
+      - ./configs:/app/configs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - home-credit-network
+
+  # ============================================================================
+  # Airflow Profile: Metadata Database (PostgreSQL 16)
+  # ============================================================================
+  airflow-postgres:
+    image: postgres:16
+    container_name: home-credit-airflow-postgres
+    profiles:
+      - airflow
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    networks:
+      - home-credit-network
+
+  # ============================================================================
+  # Airflow Profile: Celery Message Broker (Redis)
+  # ============================================================================
+  redis:
+    image: redis:7.2-bookworm
+    container_name: home-credit-redis
+    profiles:
+      - airflow
+    restart: unless-stopped
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 50
+      start_period: 10s
+    networks:
+      - home-credit-network
+
+  # ============================================================================
+  # Airflow Profile: Database Migrations & Admin Initialization
+  # ============================================================================
+  airflow-init:
+    <<: *airflow-common
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: home-credit-airflow-init
+    command: >
+      bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
+    restart: on-failure
+
+  # ============================================================================
+  # Airflow Profile: Web UI & API Server
+  # ============================================================================
+  airflow-apiserver:
+    <<: *airflow-common
+    container_name: home-credit-airflow-apiserver
+    command: api-server
+    ports:
+      - "${AIRFLOW_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ============================================================================
+  # Airflow Profile: Scheduler
+  # ============================================================================
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: home-credit-airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ============================================================================
+  # Airflow Profile: Celery Worker
+  # ============================================================================
+  airflow-worker:
+    <<: *airflow-common
+    container_name: home-credit-airflow-worker
+    command: celery worker
+    healthcheck:
+      test: ["CMD-SHELL", 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ============================================================================
+  # Airflow Profile: DAG Processor
+  # ============================================================================
+  airflow-dag-processor:
+    <<: *airflow-common
+    container_name: home-credit-airflow-dag-processor
+    command: dag-processor
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ============================================================================
+  # Airflow Profile: Triggerer
+  # ============================================================================
+  airflow-triggerer:
+    <<: *airflow-common
+    container_name: home-credit-airflow-triggerer
+    command: triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+# ============================================================================
+# Persistent Storage Volumes & Networks
+# ============================================================================
+volumes:
+  postgres_data:
+  mlflow_data:
+  airflow_postgres_data:
+
+networks:
+  home-credit-network:
+    name: home-credit-network
+    driver: bridge

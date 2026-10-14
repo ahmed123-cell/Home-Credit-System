@@ -1,4 +1,3 @@
-complete the API. meaningliss input
 CI/CD pipeline/ create docker compose
 Airflow
 points to improve: adding more test on the data pipeline

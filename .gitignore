@@ -1,31 +1,126 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-
-# logs
-*logs
-
-# data 
-data/
-
-# env
+# ==============================================================================
+# Environment Variables & Secrets
+# ==============================================================================
+.env
+.env.*
 *.env
+# Ensure the safe template is tracked
+!.env.example
 
-# dbt
+# ==============================================================================
+# Datasets & Large Files (GitHub 100MB limit)
+# ==============================================================================
+data/
+*.parquet
+*.csv
+# Keep folder structure if needed
+!data/.gitkeep
+!data/**/.gitkeep
+
+# ==============================================================================
+# Model Artifacts (Uncomment if models are stored in MLflow/S3 only)
+# ==============================================================================
+# If you want to keep models out of git:
+# models/*
+# !models/.gitkeep
+
+# ==============================================================================
+# MLflow Tracking & Local Databases
+# ==============================================================================
+mlruns/
+mlartifacts/
+mlflow.db
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================================================================
+# Airflow Runtime & Logs
+# ==============================================================================
+airflow/logs/
+airflow/airflow.db
+airflow/*.pid
+
+# ==============================================================================
+# dbt Build Artifacts & Logs
+# ==============================================================================
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+dbt/dbt_modules/
 
-# models
-models/
+# ==============================================================================
+# Logs & General Runtime Files
+# ==============================================================================
+logs/
+*.log
 
-# mlruns
-mlruns
-mlflow.db
+# ==============================================================================
+# Python Bytecode & Packaging
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==============================================================================
+# Testing, Coverage & Linters
+# ==============================================================================
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+
+# ==============================================================================
+# Virtual Environments
+# ==============================================================================
+.venv/
+venv/
+ENV/
+env/
+
+# ==============================================================================
+# Operating System & IDE Files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
