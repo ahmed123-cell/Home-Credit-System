@@ -2,15 +2,24 @@ version: 2
 
 models:
   - name: mart_application_features
+    description: "Unified analytics mart with consolidated features across application, bureau, and transaction history."
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
-      - name: dataset
+        description: "Unique applicant credit identifier."
         data_tests:
+          - unique
+          - not_null
+
+      - name: dataset
+        description: "Partition identifier distinguishing train and test cohorts."
+        data_tests:
+          - not_null
           - accepted_values:
               arguments:
                 values: ["train", "test"]
+
       - name: target
+        description: "Default target indicator (1 = default, 0 = paid on time; null for test partition)."
         data_tests:
           - not_null:
               config:
@@ -19,3 +28,75 @@ models:
               arguments:
                 values: [0, 1]
                 quote: false
+
+      - name: age_years
+        description: "Applicant age in years derived from days_birth."
+        data_tests:
+          - is_positive
+          - in_range:
+              arguments:
+                min_value: 18
+                max_value: 100
+
+      - name: amt_credit
+        description: "Total credit amount of the loan application."
+        data_tests:
+          - is_positive
+
+      - name: amt_income_total
+        description: "Total annual income stated by applicant."
+        data_tests:
+          - is_positive
+
+      - name: ext_source_mean
+        description: "Average external credit bureau score (range 0.0 to 1.0)."
+        data_tests:
+          - in_range:
+              arguments:
+                min_value: 0.0
+                max_value: 1.0
+          - no_infinite_or_nan
+
+      - name: credit_income_ratio
+        description: "Loan amount to annual income affordability ratio."
+        data_tests:
+          - is_non_negative
+          - no_infinite_or_nan
+
+      - name: annuity_income_ratio
+        description: "Monthly annuity payment to annual income affordability ratio."
+        data_tests:
+          - is_non_negative
+          - no_infinite_or_nan
+
+      - name: bureau_active_cnt
+        description: "Number of active bureau credit accounts."
+        data_tests:
+          - is_non_negative
+          - column_comparison:
+              arguments:
+                compare_column: bureau_cnt
+                operator: "<="
+
+  - name: mart_train
+    description: "Training subset filtered from mart_application_features where dataset = 'train'."
+    columns:
+      - name: sk_id_curr
+        data_tests:
+          - unique
+          - not_null
+      - name: target
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false
+
+  - name: mart_test
+    description: "Test subset filtered from mart_application_features where dataset = 'test'."
+    columns:
+      - name: sk_id_curr
+        data_tests:
+          - unique
+          - not_null

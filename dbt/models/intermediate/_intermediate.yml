@@ -4,29 +4,70 @@ models:
   - name: int_bureau_balance_by_bureau
     columns:
       - name: sk_id_bureau
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
 
   - name: int_bureau_agg
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: bureau_cnt
+        data_tests:
+          - is_non_negative
+      - name: bureau_active_cnt
+        data_tests:
+          - is_non_negative
+          - column_comparison:
+              arguments:
+                compare_column: bureau_cnt
+                operator: "<="
 
   - name: int_previous_application_agg
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: prev_cnt
+        data_tests:
+          - is_non_negative
+      - name: prev_approved_cnt
+        data_tests:
+          - is_non_negative
+          - column_comparison:
+              arguments:
+                compare_column: prev_cnt
+                operator: "<="
 
   - name: int_installments_agg
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: inst_cnt
+        data_tests:
+          - is_non_negative
 
   - name: int_pos_cash_agg
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: pos_rows
+        data_tests:
+          - is_non_negative
 
   - name: int_credit_card_agg
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: cc_rows
+        data_tests:
+          - is_non_negative

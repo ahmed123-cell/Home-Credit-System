@@ -1,6 +1,6 @@
 {
   "model_type": "lightgbm",
-  "experiment_name": "home_credit_26_10_14_20:22:36",
+  "experiment_name": "home_credit_26_10_15_13:55:00",
   "metrics": {
     "train_roc_auc": 0.790686,
     "train_gini": 0.581371,

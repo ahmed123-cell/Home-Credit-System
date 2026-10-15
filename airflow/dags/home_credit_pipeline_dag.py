@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from airflow import DAG
+
 try:
     from airflow.providers.standard.operators.bash import BashOperator
     from airflow.providers.standard.operators.python import PythonOperator
@@ -49,17 +50,17 @@ def test_warehouse_connection() -> None:
         "postgresql://home_credit:home_credit_password@postgres:5432/home_credit",
     )
     log.info("Testing connection to database at %s", db_url.split("@")[-1])
-    with psycopg.connect(db_url) as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT 1;")
-            result = cur.fetchone()
-            assert result and result[0] == 1, "Database query returned unexpected result"
+    with psycopg.connect(db_url) as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1;")
+        result = cur.fetchone()
+        assert result and result[0] == 1, "Database query returned unexpected result"
     log.info("PostgreSQL database connection successful.")
 
 
 def validate_artifacts() -> None:
     """Verify that all required model artifacts exist and can be loaded."""
     import json
+
     import joblib
     import onnxruntime as ort
 
@@ -90,11 +91,10 @@ with DAG(
     default_args=default_args,
     description="End-to-End Home Credit ingestion, dbt transformation, and model retraining",
     schedule=None,  # Trigger on-demand or weekly: "@weekly"
-    start_date=datetime(2026, 1, 1),
+    start_date=datetime(2026, 1, 1, tzinfo=UTC),
     catchup=False,
     tags=["home-credit", "mlops", "dbt", "lightgbm"],
 ) as dag:
-
     # 1. Connectivity Check
     check_db = PythonOperator(
         task_id="check_db_connection",

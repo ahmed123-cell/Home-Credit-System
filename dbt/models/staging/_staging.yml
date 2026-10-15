@@ -4,25 +4,52 @@ models:
   - name: stg_application_train
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
       - name: target
         data_tests:
+          - not_null
           - accepted_values:
               arguments:
                 values: [0, 1]
                 quote: false
+      - name: amt_credit
+        data_tests:
+          - is_positive
+      - name: amt_income_total
+        data_tests:
+          - is_positive
 
   - name: stg_application_test
     columns:
       - name: sk_id_curr
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: amt_credit
+        data_tests:
+          - is_positive
+      - name: amt_income_total
+        data_tests:
+          - is_positive
 
   - name: stg_bureau
     columns:
       - name: sk_id_bureau
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: sk_id_curr
+        data_tests:
+          - not_null
 
   - name: stg_previous_application
     columns:
       - name: sk_id_prev
-        data_tests: [unique, not_null]
+        data_tests:
+          - unique
+          - not_null
+      - name: sk_id_curr
+        data_tests:
+          - not_null

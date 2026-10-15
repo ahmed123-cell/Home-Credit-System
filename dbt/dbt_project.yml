@@ -4,6 +4,7 @@ profile: home_credit
 
 model-paths: ["models"]
 macro-paths: ["macros"]
+test-paths: ["tests"]
 
 models:
   home_credit:
