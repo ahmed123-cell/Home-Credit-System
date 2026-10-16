@@ -30,7 +30,6 @@ data/
 mlruns/
 mlartifacts/
 mlflow.db
-models/
 *.db
 *.sqlite
 *.sqlite3
