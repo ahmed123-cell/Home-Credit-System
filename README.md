@@ -54,38 +54,11 @@
 
 ## 🏛️ End-to-End System Architecture
 
-```mermaid
-flowchart TD
-    subgraph DataPlatform["1. Data Warehouse Platform"]
-        CSV["8 Relational CSV Datasets (2.5 GB)<br/>Applications, Bureau, Cards, POS, Installments"] --> Ingestion["PyArrow + psycopg COPY Stream<br/>(src/ingestion/load_raw.py)"]
-        Ingestion --> RawDB[("PostgreSQL: raw")]
-        RawDB --> dbtStg[("dbt: staging")]
-        dbtStg --> dbtInt[("dbt: intermediate")]
-        dbtInt --> dbtMarts[("dbt: marts (205+ Features)")]
-        dbtMarts --> dbtTests["69 Automated Data Quality Tests<br/>(Zero Leakage & Range Checks)"]
-    end
+<div align="center">
 
-    subgraph MLOpsPlatform["2. MLOps & Optimization Engine"]
-        dbtMarts --> TrainEngine["LightGBM / XGBoost Engine<br/>Cost-Sensitive Re-weighting (~11.4:1)"]
-        TrainEngine --> Eval["Comprehensive Evaluation<br/>ROC-AUC (0.767), PR-AUC (0.246), Gini (0.533)"]
-        TrainEngine --> MLflow["MLflow Tracking & Registry (:5000)<br/>Experiment Runs & Proxied Artifacts"]
-        TrainEngine --> ONNXExport["ONNX Converter (onnxmltools)<br/>Output: lightgbm.onnx (219 KB)"]
-        ONNXExport --> ONNXVal["ONNX Runtime Validator<br/>Validates Shape [None, 205] & Probabilities"]
-    end
+<img src="media/flowchart.png" alt="Home Credit Project Banner" width="800" height="500"/>
 
-    subgraph ServingPlatform["3. Real-Time Application & UI"]
-        ONNXVal --> FastAPI["FastAPI Inference Engine (:8000)<br/>Lifespan Preloading & Anti-Tampering"]
-        FastAPI --> WebUI["Interactive Risk Dashboard (:8000/ui)<br/>Risk Gauge & Batch CSV Processor"]
-    end
-
-    subgraph WorkflowEngine["4. Orchestration & CI/CD"]
-        Airflow["Apache Airflow 3 Celery Cluster (:8080)<br/>DAG: home_credit_pipeline"]
-        GitHubCI["GitHub Actions CI/CD Pipeline<br/>Ruff Lint, Pytest Suite, Docker Buildx"]
-        
-        Airflow -.->|Orchestrates| DataPlatform
-        Airflow -.->|Orchestrates| MLOpsPlatform
-    end
-```
+</div>
 
 ---
 
